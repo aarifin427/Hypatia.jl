@@ -310,6 +310,7 @@ function get_proxsqr(
 end
 
 include("nonnegative.jl")
+include("conesample.jl")
 include("possemideftri.jl")
 include("doublynonnegativetri.jl")
 include("possemideftrisparse/possemideftrisparse.jl")

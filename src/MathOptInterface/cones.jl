@@ -168,6 +168,24 @@ MOI.dimension(cone::NonnegativeCone) = cone.dim
 cone_from_moi(::Type{T}, cone::NonnegativeCone{T}) where {T <: Real} =
     Cones.Nonnegative{T}(cone.dim)
 
+
+"""
+$(TYPEDEF)
+
+This is a sample cone.
+
+$(TYPEDFIELDS)
+"""
+struct ConesampleCone{T <: Real} <: MOI.AbstractVectorSet
+    dim::Int
+end
+export ConesampleCone
+
+MOI.dimension(cone::ConesampleCone) = cone.dim
+
+cone_from_moi(::Type{T}, cone::ConesampleCone{T}) where {T <: Real} =
+    Cones.Conesample{T}(cone.dim)
+
 """
 $(TYPEDEF)
 
@@ -663,6 +681,7 @@ cone_from_moi(::Type{T}, cone::WSOSInterpEpiNormEuclCone{T}) where {T <: Real} =
 
 const HypatiaCones{T <: Real} = Union{
     NonnegativeCone{T},
+    ConesampleCone{T},
     PosSemidefTriCone{T, T},
     PosSemidefTriCone{T, Complex{T}},
     DoublyNonnegativeTriCone{T},
