@@ -3,6 +3,8 @@ A Julia package for generic conic optimization with interior point algorithms.
 """
 module Hypatia
 
+greet() = print("This is modified Hypatia.")
+
 using DocStringExtensions
 const RealOrComplex{T <: Real} = Union{T, Complex{T}}
 
