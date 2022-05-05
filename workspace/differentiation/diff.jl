@@ -8,36 +8,13 @@ Scope:
 - polynomial
 - homogenous
 - hyperbolic -> how to check?
-"""
 
-# ===========================================================#
-"""
-This is the naive way or using a package (that does everything for you)
-
-Using automatic diff package: "ForwardDiff"
 ref: https://discourse.julialang.org/t/how-to-do-partial-derivatives/19869/3
-"""
-# ===========================================================#
-using ForwardDiff
-
-# eg1: x^2 + y^2 + z^2
-f(x) = x[1]^2 + x[2]^2 + x[3]^2
-
-g = x -> ForwardDiff.gradient(f, x);
-g([1,2,3])
-
-# ===========================================================#
-"""
 ref: http://www.cecm.sfu.ca/~mmonagan/talks/eccad2013.pdf
 """
-# ===========================================================#
 
-p = [     # data structure representing a polynomial
-    1 1 1 # the coefficients of every term
-    2 0 0 # power of x in every term
-    0 2 0 # power of y in every term
-    0 0 2 # power of z in every term
-]
+using ForwardDiff
+using Random
 
 # TODO: conventional function documentation in Julia
 function gradient(point, f)
@@ -55,4 +32,25 @@ function gradient(point, f)
     return res
 end;
 
-@assert g([1,2,3]) == gradient([1,2,3], p)
+# =====================================================#
+# TEST
+# =====================================================#
+# TODO: Conventional unittest in Julia
+pwc = 50 # power cap
+n = 100  # number of tests
+passes = 0
+for k = 1:n
+    local a, b, c = rand(1:pwc), rand(1:pwc), rand(1:pwc)
+    local p = [
+        rand(1:pwc) rand(1:pwc) rand(1:pwc)
+        rand(1:pwc) 0           0
+        0           rand(1:pwc) 0
+        0           0           rand(1:pwc)
+    ]
+    local f(x) = p[1,1]*x[1]^p[2,1] + p[1,2]*x[2]^p[3,2] + p[1,3]*x[3]^p[4,3]
+    local g = x -> ForwardDiff.gradient(f, x);
+    local point = [rand(1:10), rand(1:10), rand(1:10)]
+    
+    global passes += g(point) == gradient(point, p)
+end;
+print(passes/n*100, "%")
