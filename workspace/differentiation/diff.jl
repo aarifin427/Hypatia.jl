@@ -14,6 +14,22 @@ ref: http://www.cecm.sfu.ca/~mmonagan/talks/eccad2013.pdf
 """
 
 # =====================================================#
+# Function representation to value
+# =====================================================#
+function func_val(p::Matrix{T}, x::Vector{T}) where {T <: Real}
+    res = 0 # result
+    (row, col) = size(p)
+    for j = 1:col
+        addend = p[1,j]
+        for i = 2:row
+            addend *= x[i-1]^p[i,j]
+        end
+        res += addend
+    end
+    return res
+end
+
+# =====================================================#
 # Gradient function
 # =====================================================#
 # TODO: conventional function documentation in Julia
