@@ -10,6 +10,7 @@ using Hypatia
 using Hypatia.Cones
 using Hypatia.Models
 import Hypatia.Solvers
+using LinearAlgebra
 
 (m, n, nz_frac) = (2, 4, 1.0)
 @assert 0 < nz_frac <= 1
