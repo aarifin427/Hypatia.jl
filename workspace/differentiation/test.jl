@@ -2,6 +2,22 @@ using Test
 using ForwardDiff
 using Random
 include("diff.jl")
+include("function_examples.jl")
+
+@testset "Substitute values into polynomial function representations" begin
+    @testset "Function 1: Vamos polynomial" begin
+        for k = 1:100
+            local point = [rand(1:10), rand(1:10), rand(1:10), rand(1:10)]
+            @test f1(point) == func_val(p1, point)
+        end
+    end
+    @testset "Function 2: Polynomial W from Blekherman" begin
+        for k = 1:100
+            local point = [rand(1:10), rand(1:10), rand(1:10), rand(1:10)]
+            @test f2(point) == func_val(p2, point)
+        end
+    end
+end
 
 @testset "y = x^a + y^b + z^c structure" begin
     @testset "Polynomial of 4 terms" begin
