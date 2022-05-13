@@ -54,7 +54,10 @@ set_initial_point!(arr::AbstractVector, cone::Conesample) = (arr .= 1)
 
 function update_feas(cone::Conesample{T}) where T
     @assert !cone.feas_updated
+
+    # Feasibility check: check if all elements of the cone's point is > 0
     cone.is_feas = all(>(eps(T)), cone.point)
+
     cone.feas_updated = true
     return cone.is_feas
 end

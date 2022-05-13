@@ -13,10 +13,12 @@ LinearMaps = "7a12625a-238d-50fd-b39a-03d52299707e"
 MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 PolynomialRoots = "3a141323-8675-5d76-9d11-e1df1406c778"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 SuiteSparse = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
+SymPy = "24249f21-da20-56a4-8eb1-6a02cf4ae2e6"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]

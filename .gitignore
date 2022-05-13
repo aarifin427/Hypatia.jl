@@ -5,3 +5,6 @@ Manifest.toml
 *.jl.mem
 benchmarks/*/analysis/*
 benchmarks/*/raw/*
+Project.toml
+.vscode/settings.json
+Project.toml
