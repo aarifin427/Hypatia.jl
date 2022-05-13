@@ -95,3 +95,59 @@ function compute_hess_rep(dp::Matrix{Matrix{T}}) where {T <: Real}
     return ddp
 end
 # TODO: Test
+
+# =====================================================#
+# Sample Cone struct
+# =====================================================#
+mutable struct Conesample{T <: Real}
+    dim::Int
+
+    point::Vector{T}
+    grad::Vector{T}
+    p_function::Matrix{T}
+    dp_function::Matrix{Matrix{T}}
+    ddp_function::Matrix{Matrix{T}}
+
+    # function Conesample{T}(dim::Int64, p_function::Matrix{T}) where {T <: Real}
+    function Conesample{T}(dim::Int, p_function::Matrix{T}) where {T <: Real}
+        @assert dim >= 1
+        cone = new{T}()
+        cone.dim = dim
+        cone.p_function = p_function
+        cone.dp_function = compute_grad_rep(cone.p_function)
+        cone.ddp_function = compute_hess_rep(cone.dp_function)
+        return cone
+    end
+end
+
+
+# =====================================================#
+# Gradient barrier function
+# =====================================================#
+function update_grad(cone::Conesample)
+    cone.grad = -mat_eval(cone.dp_function, cone.point)/func_eval(cone.p_function, cone.point)
+end
+
+# =====================================================#
+# Hessian barrier function to a vector
+# =====================================================#
+function compute_hess_prod(
+    prod::AbstractVecOrMat,
+    arr::AbstractVecOrMat,
+    cone::Conesample
+    )
+    hess = mat_eval(cone.ddp_function, cone.point)
+    grad = mat_eval(cone.dp_function, cone.point)
+    px = func_eval(cone.p_function, cone.point)
+    k1, k2 = -1/px, -1/(px^2) * (grad .* arr)
+    prod = k1*(hess * arr) + k2*grad
+    return prod
+end
+
+include("function_examples.jl")
+f, cone = f1, Conesample{Int64}(4, p1)
+g = x -> ForwardDiff.gradient(x -> -log(f(x)), x)
+point = [1,2,3,4]
+cone.point = point
+update_grad(cone)
+cone.grad

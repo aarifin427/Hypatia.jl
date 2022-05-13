@@ -133,3 +133,111 @@ end
         end
     end
 end
+
+@testset "Prototype sample cone" begin
+    f_array = [f1, f2]
+    f_names = ["f1", "f2"]
+    p_array = [p1, p2]
+    c = Array{Conesample{Int64}}(undef, length(p_array))
+    for i = 1:length(c)
+        c[i] = Conesample{Int64}(length(p_array[:,1])-1, p_array[i])
+    end
+
+    @testset "p_function" begin
+        for i = 1:length(p_array)
+            f, cone = f_array[i], c[i]
+            @testset "$v" for v in f_names
+                for k = 1:5
+                    local point = [rand(1:10), rand(1:10), rand(1:10), rand(1:10)]
+                    cone.point = point
+                    @test f(point) == func_eval(cone.p_function, cone.point)
+                end
+            end            
+        end
+    end
+
+    @testset "barrier gradient" begin
+        for i = 1:length(p_array)
+            f, cone = f_array[i], c[i]
+            g = x -> ForwardDiff.gradient(x -> -log(f(x)), x)
+            @testset "$v" for v in f_names
+                for k = 1:5
+                    local point = [rand(1:10), rand(1:10), rand(1:10), rand(1:10)]
+                    cone.point = point
+                    upgrade_grad(cone)
+                    @test g(point) == cone.grad
+                end
+            end
+        end
+    end
+
+    @testset "barrier hessian product" begin
+        for i = 1:length(p_array)
+            f, cone = f_array[i], c[i]
+            h = x -> ForwardDiff.hessian(x -> -log(f(x)), x)
+            @testset "$v" for v in f_names
+                for k = 1:5
+                    local point = [rand(1:10), rand(1:10), rand(1:10), rand(1:10)]
+                    local arr = [rand(1:10), rand(1:10), rand(1:10), rand(1:10)]
+                    cone.point = point
+                    @test h(point)*arr == compute_hess_prod(arr, arr, cone)
+                end
+            end
+        end
+    end
+
+    @testset "Prototype sample cone" begin
+        f_array = [f1, f2]
+        f_names = ["f1", "f2"]
+        p_array = [p1, p2]
+        c = Array{Conesample{Int64}}(undef, length(p_array))
+        for i = 1:length(c)
+            c[i] = Conesample{Int64}(length(p_array[:,1])-1, p_array[i])
+        end
+    
+        @testset "p_function" begin
+            for i = 1:length(p_array)
+                f, cone = f_array[i], c[i]
+                @testset "$f_names[i]" for v in [f_names[i]]
+                    for k = 1:5
+                        local point = [rand(1:10), rand(1:10), rand(1:10), rand(1:10)]
+                        cone.point = point
+                        @test f(point) == func_eval(cone.p_function, cone.point)
+                    end
+                end            
+            end
+        end
+        @testset "barrier gradient" begin
+            for i = 1:length(p_array)
+                f, cone = f_array[i], c[i]
+                g = x -> ForwardDiff.gradient(x -> -log(f(x)), x)
+                @testset "$v" for v in [f_names[i]]
+                    for k = 1:5
+                        local point = [rand(1:10), rand(1:10), rand(1:10), rand(1:10)]
+                        cone.point = point
+                        update_grad(cone)
+                        bitmat = g(point) .== cone.grad
+                        @test sum(bitmat) == length(bitmat)
+                    end
+                end
+            end
+        end
+    
+        @testset "barrier hessian product" begin
+            for i = 1:length(p_array)
+                f, cone = f_array[i], c[i]
+                h = x -> ForwardDiff.hessian(x -> -log(f(x)), x)
+                @testset "$v" for v in [f_names[i]]
+                    for k = 1:5
+                        local point = [rand(1:10), rand(1:10), rand(1:10), rand(1:10)]
+                        local arr = [rand(1:10), rand(1:10), rand(1:10), rand(1:10)]
+                        cone.point = point
+                        bitmat = h(point)*arr .== compute_hess_prod(arr, arr, cone)
+
+                        @test sum(bitmat) == length(bitmat)
+                    end
+                end
+            end
+        end
+    end
+end
