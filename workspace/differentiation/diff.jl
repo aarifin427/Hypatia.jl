@@ -139,15 +139,7 @@ function compute_hess_prod(
     hess = mat_eval(cone.ddp_function, cone.point)
     grad = mat_eval(cone.dp_function, cone.point)
     px = func_eval(cone.p_function, cone.point)
-    k1, k2 = -1/px, -1/(px^2) * (grad .* arr)
+    k1, k2 = -1/px, 1/(px^2) * (grad'arr)
     prod = k1*(hess * arr) + k2*grad
     return prod
 end
-
-include("function_examples.jl")
-f, cone = f1, Conesample{Int64}(4, p1)
-g = x -> ForwardDiff.gradient(x -> -log(f(x)), x)
-point = [1,2,3,4]
-cone.point = point
-update_grad(cone)
-cone.grad

@@ -1,8 +1,13 @@
 using Test
 using ForwardDiff
+using LinearAlgebra
 using Random
 include("diff.jl")
 include("function_examples.jl")
+
+##################GLOBAL######################
+tol = 10*eps(Float64)
+##############################################
 
 @testset "Partial diff" begin
     @test partial_diff(p2, 1) == [
@@ -135,18 +140,23 @@ end
 end
 
 @testset "Prototype sample cone" begin
-    f_array = [f1, f2]
+    """
+    TODO:
+    - use "convert(newType, variable)" instead of 1.0*variable
+    """
+    # multiply by 1.0 to convert int64 into float64
+    f_array = [f1, f2] # actual function, Julia expression
     f_names = ["f1", "f2"]
-    p_array = [p1, p2]
-    c = Array{Conesample{Int64}}(undef, length(p_array))
+    p_array = 1.0*[p1, p2] # matrix representation of the functions
+    c = Array{Conesample{Float64}}(undef, length(p_array))
     for i = 1:length(c)
-        c[i] = Conesample{Int64}(length(p_array[:,1])-1, p_array[i])
+        c[i] = Conesample{Float64}(length(p_array[:,1])-1, p_array[i])
     end
 
     @testset "p_function" begin
         for i = 1:length(p_array)
             f, cone = f_array[i], c[i]
-            @testset "$v" for v in f_names
+            @testset "$(f_names[i])" begin
                 for k = 1:5
                     local point = [rand(1:10), rand(1:10), rand(1:10), rand(1:10)]
                     cone.point = point
@@ -160,12 +170,12 @@ end
         for i = 1:length(p_array)
             f, cone = f_array[i], c[i]
             g = x -> ForwardDiff.gradient(x -> -log(f(x)), x)
-            @testset "$v" for v in f_names
+            @testset "$(f_names[i])" begin
                 for k = 1:5
                     local point = [rand(1:10), rand(1:10), rand(1:10), rand(1:10)]
                     cone.point = point
-                    upgrade_grad(cone)
-                    @test g(point) == cone.grad
+                    update_grad(cone)
+                    @test norm(g(point) - cone.grad) < tol
                 end
             end
         end
@@ -175,67 +185,12 @@ end
         for i = 1:length(p_array)
             f, cone = f_array[i], c[i]
             h = x -> ForwardDiff.hessian(x -> -log(f(x)), x)
-            @testset "$v" for v in f_names
+            @testset "$(f_names[i])" begin
                 for k = 1:5
                     local point = [rand(1:10), rand(1:10), rand(1:10), rand(1:10)]
                     local arr = [rand(1:10), rand(1:10), rand(1:10), rand(1:10)]
                     cone.point = point
-                    @test h(point)*arr == compute_hess_prod(arr, arr, cone)
-                end
-            end
-        end
-    end
-
-    @testset "Prototype sample cone" begin
-        f_array = [f1, f2]
-        f_names = ["f1", "f2"]
-        p_array = [p1, p2]
-        c = Array{Conesample{Int64}}(undef, length(p_array))
-        for i = 1:length(c)
-            c[i] = Conesample{Int64}(length(p_array[:,1])-1, p_array[i])
-        end
-    
-        @testset "p_function" begin
-            for i = 1:length(p_array)
-                f, cone = f_array[i], c[i]
-                @testset "$f_names[i]" for v in [f_names[i]]
-                    for k = 1:5
-                        local point = [rand(1:10), rand(1:10), rand(1:10), rand(1:10)]
-                        cone.point = point
-                        @test f(point) == func_eval(cone.p_function, cone.point)
-                    end
-                end            
-            end
-        end
-        @testset "barrier gradient" begin
-            for i = 1:length(p_array)
-                f, cone = f_array[i], c[i]
-                g = x -> ForwardDiff.gradient(x -> -log(f(x)), x)
-                @testset "$v" for v in [f_names[i]]
-                    for k = 1:5
-                        local point = [rand(1:10), rand(1:10), rand(1:10), rand(1:10)]
-                        cone.point = point
-                        update_grad(cone)
-                        bitmat = g(point) .== cone.grad
-                        @test sum(bitmat) == length(bitmat)
-                    end
-                end
-            end
-        end
-    
-        @testset "barrier hessian product" begin
-            for i = 1:length(p_array)
-                f, cone = f_array[i], c[i]
-                h = x -> ForwardDiff.hessian(x -> -log(f(x)), x)
-                @testset "$v" for v in [f_names[i]]
-                    for k = 1:5
-                        local point = [rand(1:10), rand(1:10), rand(1:10), rand(1:10)]
-                        local arr = [rand(1:10), rand(1:10), rand(1:10), rand(1:10)]
-                        cone.point = point
-                        bitmat = h(point)*arr .== compute_hess_prod(arr, arr, cone)
-
-                        @test sum(bitmat) == length(bitmat)
-                    end
+                    @test norm(h(point)*arr - compute_hess_prod(arr, arr, cone)) < tol
                 end
             end
         end
