@@ -102,6 +102,7 @@ end
 mutable struct Conesample{T <: Real}
     dim::Int
 
+    init::Union{Bool, Vector{T}}
     point::Vector{T}
     grad::Vector{T}
     p_function::Matrix{T}
@@ -109,17 +110,29 @@ mutable struct Conesample{T <: Real}
     ddp_function::Matrix{Matrix{T}}
 
     # function Conesample{T}(dim::Int64, p_function::Matrix{T}) where {T <: Real}
-    function Conesample{T}(dim::Int, p_function::Matrix{T}) where {T <: Real}
+    function Conesample{T}(dim::Int, p_function::Matrix{T}, init::Union{Bool, Vector{T}}=false) where {T <: Real}
         @assert dim >= 1
         cone = new{T}()
         cone.dim = dim
+        cone.init = init
         cone.p_function = p_function
         cone.dp_function = compute_grad_rep(cone.p_function)
         cone.ddp_function = compute_hess_rep(cone.dp_function)
         return cone
     end
 end
-
+# =====================================================#
+# Initialize point
+# =====================================================#
+function set_initial_point!(arr::AbstractVector, cone::Conesample)
+    if cone.init == false
+        arr .= 1
+        return arr
+    else
+        # TODO: assert that cone.init has same size or dimensions as arr input
+        return cone.init
+    end
+end
 
 # =====================================================#
 # Gradient barrier function
