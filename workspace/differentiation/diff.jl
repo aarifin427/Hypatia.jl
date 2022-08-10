@@ -156,3 +156,16 @@ function compute_hess_prod(
     prod = k1*(hess * arr) + k2*grad
     return prod
 end
+
+# =====================================================#
+# Hessian barrier function
+# =====================================================#
+function compute_hess(
+    cone::Conesample
+    )
+    cone.grad = -mat_eval(cone.dp_function, cone.point)/func_eval(cone.p_function, cone.point)
+    px = func_eval(cone.p_function, cone.point) # evaluates p(x) where x = cone.point
+    dpx = mat_eval(cone.dp_function, cone.point)
+    d2px = mat_eval(cone.ddp_function, cone.point) # evaluates nabla^2_p(x) or the hess of p(x) at x = cone.point
+    return (-px * d2px + dpx * dpx')/(px^2)
+end

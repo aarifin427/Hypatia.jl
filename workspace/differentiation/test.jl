@@ -195,4 +195,18 @@ end
             end
         end
     end
+
+    @testset "barrier hessian" begin
+        for i = 1:length(p_array)
+            f, cone = f_array[i], c[i]
+            h = x -> ForwardDiff.hessian(x -> -log(f(x)), x)
+            @testset "$(f_names[i])" begin
+                for k = 1:5
+                    local point = [rand(1:10), rand(1:10), rand(1:10), rand(1:10)]
+                    cone.point = point
+                    @test norm(h(point) - compute_hess(cone)) < tol
+                end
+            end
+        end
+    end
 end;
