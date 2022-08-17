@@ -108,6 +108,7 @@ mutable struct Conesample{T <: Real}
     p_function::Matrix{T}
     dp_function::Matrix{Matrix{T}}
     ddp_function::Matrix{Matrix{T}}
+    dder3::Vector{T}
 
     # function Conesample{T}(dim::Int64, p_function::Matrix{T}) where {T <: Real}
     function Conesample{T}(dim::Int, p_function::Matrix{T}, init::Union{Bool, Vector{T}}=false) where {T <: Real}
@@ -168,4 +169,141 @@ function compute_hess(
     dpx = mat_eval(cone.dp_function, cone.point)
     d2px = mat_eval(cone.ddp_function, cone.point) # evaluates nabla^2_p(x) or the hess of p(x) at x = cone.point
     return (-px * d2px + dpx * dpx')/(px^2)
+end
+
+###
+# multiply polynomial representation by a coefficient
+###
+function mult_coeff_to_polynomial(
+    poly_rep::Matrix{T},
+    k::T
+    ) where T <: Real
+    _, col = size(poly_rep)
+    for j = 1:col
+        poly_rep[1, j] *= k
+    end
+    return poly_rep
+end
+# =====================================================#
+# Dder3 function
+# =====================================================#
+function dder3(
+    cone::Conesample, 
+    dir::AbstractVector
+    )
+    """
+    This function evaluates v'*hessF(x)*v where hessF(x) is the hessian
+        of the barrier function or hessF(x) = hess(-log(p(x)))
+    
+    v'*hessF(x)*v is expressed as a(x)/b(x) where:
+        a(x) = -p(x) * v' * hess(p(x)) * v + (v * grad(p(x))')^2
+        b(x) = (p(x))^2
+    
+    break up the expressions:
+        a(x) = term1(x) + term2(x), where
+            term1(x) = -px * vd2pxv, where
+                px = p(x)
+                vd2pxv = v' * hess(p(x)) * v
+            term2(x) = (vdpx)^2, where
+                vdpx = v * grad(p(x))'
+        dax = grad(a(x)) = -vd2pxv * dpx - px * dvd2pxv + 2*vdpx*dvdpx, where
+            dvd2pxv = grad(v' * hess(p(x)) * v) in terms of x
+        dbx = 2*px*dpx, where
+            dpx = grad(p(x))
+    """
+    # @assert cone.hess_updated
+    px = func_eval(cone.p_function, cone.point) # evaluates p(x) where x = cone.point
+    dpx = mat_eval(cone.dp_function, cone.point)
+    d2px = mat_eval(cone.ddp_function, cone.point) # evaluates nabla^2_p(x) or the hess of p(x) at x = cone.point
+    n = cone.dim
+    v = dir
+
+    # b(x=cone.point)
+    bx_val = px^2
+    # a(x=cone.point)
+    ax_val = -px*(v' * d2px * v) + (v' * dpx)^2
+
+    T = typeof(cone.point[1])
+    ################################################
+    # Construct grad of a(x), first term
+    ################################################
+    # this will store all 16 terms of v'*∇2p(x)*v
+    vd2pxv = deepcopy(cone.ddp_function)
+    # perform RHS mult ∇2p(x)*v
+    for i = 1:n
+        for j = 1:n
+            vd2pxv[i,j] = mult_coeff_to_polynomial(vd2pxv[i,j], v[j])
+        end
+    end
+    # perform LHS mult v'*(∇2p(x)*v)
+    for j = 1:n
+        for i = 1:n
+            vd2pxv[i,j] = mult_coeff_to_polynomial(vd2pxv[i,j], v[i])
+        end
+    end
+
+    # this stores the partial differentiation of vd2pxv in terms of x1, x2, ..., xn, then sub x = cone.point
+    dvd2pxv = zeros(T, 4)
+    for k = 1:n
+        sum = 0
+        for i = 1:n
+            for j = 1:n
+                # partially diff in terms of x_k
+                # partially diff, then compute at x = cone.point
+                sum += func_eval(partial_diff(vd2pxv[i,j], k), cone.point)
+            end
+        end
+        dvd2pxv[k] = sum
+    end
+    
+    # compute v'*(∇2p(x)*v) at x = cone.point
+    sum = 0
+    for i = 1:n
+        for j = 1:n
+            sum += func_eval(vd2pxv[i,j], cone.point)
+        end
+    end
+    vd2pxv = sum # scalar
+
+    ################################################
+    # Construct grad of a(x), second term
+    ################################################
+    # this will store all 4 terms of v'*∇p(x)
+    vdpx = deepcopy(cone.dp_function)
+    for i = 1:n
+        vdpx[i] = mult_coeff_to_polynomial(vdpx[i], v[i])
+    end
+
+    # compute d/dx_i(v'*∇p(x)) at x = cone.point
+    dvdpx = zeros(T, 4)
+    for k = 1:n
+        sum = 0
+        for i = 1:n
+            sum += func_eval(partial_diff(vdpx[i], k), cone.point)
+        end
+        dvdpx[k] = sum
+    end
+
+    # compute v'*∇p(x) at x = cone.point
+    sum = 0
+    for i = 1:n
+        sum += func_eval(vdpx[i], cone.point)
+    end
+    vdpx = sum # scalar
+
+    ################################################
+    # Construct grad of a(x), altogether
+    ################################################
+    dax = -vd2pxv * dpx - px * dvd2pxv + 2*vdpx*dvdpx
+
+    ################################################
+    # Construct grad of b(x)
+    ################################################
+    dbx = 2*px*dpx
+
+    ################################################
+    # Construct dder3
+    ################################################
+    dder3 = 1/bx_val * dax - ax_val/bx_val^2 * dbx
+    return dder3
 end

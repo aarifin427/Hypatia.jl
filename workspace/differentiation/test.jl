@@ -6,7 +6,7 @@ include("diff.jl")
 include("function_examples.jl")
 
 ##################GLOBAL######################
-tol = 10*eps(Float64)
+tol = 50*eps(Float64)
 ##############################################
 
 @testset "Partial diff" begin
@@ -150,7 +150,7 @@ end
     p_array = 1.0*[p1, p2] # matrix representation of the functions
     c = Array{Conesample{Float64}}(undef, length(p_array))
     for i = 1:length(c)
-        c[i] = Conesample{Float64}(length(p_array[:,1])-1, p_array[i])
+        c[i] = Conesample{Float64}(length(p_array[i][:,1])-1, p_array[i])
     end
 
     @testset "p_function" begin
@@ -205,6 +205,27 @@ end
                     local point = [rand(1:10), rand(1:10), rand(1:10), rand(1:10)]
                     cone.point = point
                     @test norm(h(point) - compute_hess(cone)) < tol
+                end
+            end
+        end
+    end
+    @testset "dder3" begin
+        for i = 1:length(p_array)
+            f, cone = f_array[i], c[i]
+            h = x -> ForwardDiff.hessian(x -> -log(f(x)), x)
+            @testset "$(f_names[i])" begin
+                for k = 1:5
+                    cone.point = 1.0*[rand(1:10), rand(1:10), rand(1:10), rand(1:10)]
+                    for j = 1:5
+                        local v = 1.0*[rand(1:10); rand(1:10); rand(1:10); rand(1:10)]
+                        g = x -> ForwardDiff.gradient(x -> v'*h(x)*v, x)
+                        # println("====TEST====")
+                        # println("v: ", v)
+                        # println("pt: ", cone.point)
+                        # println("autodiff: ", g(cone.point))
+                        # println("dder3: ", dder3(cone,v))
+                        @test norm(g(cone.point) - dder3(cone, v)) < tol
+                    end
                 end
             end
         end
