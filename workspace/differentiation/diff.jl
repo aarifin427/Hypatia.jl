@@ -227,69 +227,47 @@ function dder3(
     ################################################
     # Construct grad of a(x), first term
     ################################################
-    # this will store all 16 terms of v'*∇2p(x)*v
-    vd2pxv = deepcopy(cone.ddp_function)
-    # perform RHS mult ∇2p(x)*v
+    multiplier = v * v'
+
+    # compute v'*(∇2p(x)*v) at x = cone.point
+    # this is equivalent to element by element mult of (v * v').(∇2p(x)) where x = cone.point where multiplier = v*v'
+    vd2pxv = 0
     for i = 1:n
         for j = 1:n
-            vd2pxv[i,j] = mult_coeff_to_polynomial(vd2pxv[i,j], v[j])
-        end
-    end
-    # perform LHS mult v'*(∇2p(x)*v)
-    for j = 1:n
-        for i = 1:n
-            vd2pxv[i,j] = mult_coeff_to_polynomial(vd2pxv[i,j], v[i])
+            vd2pxv += multiplier[i,j]*d2px[i,j]
         end
     end
 
-    # this stores the partial differentiation of vd2pxv in terms of x1, x2, ..., xn, then sub x = cone.point
+    # compute d/dx(v'*(∇2p(x)*v)) at x = cone.point
     dvd2pxv = zeros(T, 4)
     for k = 1:n
         sum = 0
+        # element by element multiplication of (v * v').Y, where Y = d/dx_k(∇2p(x))
         for i = 1:n
             for j = 1:n
-                # partially diff in terms of x_k
-                # partially diff, then compute at x = cone.point
-                sum += func_eval(partial_diff(vd2pxv[i,j], k), cone.point)
+                sum += multiplier[i,j]*func_eval(partial_diff(cone.ddp_function[i,j], k), cone.point)
             end
         end
         dvd2pxv[k] = sum
     end
-    
-    # compute v'*(∇2p(x)*v) at x = cone.point
-    sum = 0
-    for i = 1:n
-        for j = 1:n
-            sum += func_eval(vd2pxv[i,j], cone.point)
-        end
-    end
-    vd2pxv = sum # scalar
 
     ################################################
     # Construct grad of a(x), second term
     ################################################
-    # this will store all 4 terms of v'*∇p(x)
-    vdpx = deepcopy(cone.dp_function)
+    # compute v'*∇p(x) at x = cone.point
+    # this is equivalent to element by element multiplication of v.∇p(x)
+    vdpx = 0
     for i = 1:n
-        vdpx[i] = mult_coeff_to_polynomial(vdpx[i], v[i])
+        vdpx += v[i]*dpx[i]
     end
 
     # compute d/dx_i(v'*∇p(x)) at x = cone.point
     dvdpx = zeros(T, 4)
-    for k = 1:n
-        sum = 0
-        for i = 1:n
-            sum += func_eval(partial_diff(vdpx[i], k), cone.point)
-        end
-        dvdpx[k] = sum
-    end
-
-    # compute v'*∇p(x) at x = cone.point
-    sum = 0
     for i = 1:n
-        sum += func_eval(vdpx[i], cone.point)
+        for j = 1:n
+            dvdpx[i] += v[j] * d2px[i,j]
+        end
     end
-    vdpx = sum # scalar
 
     ################################################
     # Construct grad of a(x), altogether

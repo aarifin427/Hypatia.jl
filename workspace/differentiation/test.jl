@@ -6,7 +6,7 @@ include("diff.jl")
 include("function_examples.jl")
 
 ##################GLOBAL######################
-tol = 50*eps(Float64)
+tol = 100*eps(Float64)
 ##############################################
 
 @testset "Partial diff" begin
@@ -219,11 +219,7 @@ end
                     for j = 1:5
                         local v = 1.0*[rand(1:10); rand(1:10); rand(1:10); rand(1:10)]
                         g = x -> ForwardDiff.gradient(x -> v'*h(x)*v, x)
-                        # println("====TEST====")
-                        # println("v: ", v)
-                        # println("pt: ", cone.point)
-                        # println("autodiff: ", g(cone.point))
-                        # println("dder3: ", dder3(cone,v))
+                        
                         @test norm(g(cone.point) - dder3(cone, v)) < tol
                     end
                 end
