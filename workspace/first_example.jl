@@ -36,7 +36,6 @@ c = [
 G = Diagonal(-one(T) * I, n) # TODO uniformscaling
 h = zeros(T, n)
 cones = Cones.Cone{T}[Cones.Nonnegative{T}(n)]
-# cones = Cones.Cone{T}[Cones.Conesample{T}(n)]
 
 model = Models.Model{T}(c, A, b, G, h, cones)
 
@@ -46,4 +45,19 @@ Solvers.solve(solver);
 Solvers.get_status(solver)
 Solvers.get_primal_obj(solver)
 Solvers.get_dual_obj(solver)
-Solvers.get_x(solver)
+ans = Solvers.get_x(solver)
+
+####
+cone0 = Cones.Cone{T}[Cones.Conesample{T}(n)]
+
+model = Models.Model{T}(c, A, b, G, h, cone0)
+
+solver = Solvers.Solver{T}(verbose = true);
+Solvers.load(solver, model);
+Solvers.solve(solver);
+Solvers.get_status(solver)
+Solvers.get_primal_obj(solver)
+Solvers.get_dual_obj(solver)
+a = Solvers.get_x(solver)
+
+println(norm(a - ans))

@@ -73,8 +73,7 @@ function update_feas(cone::Conesample{T}) where T
 
     cone.is_feas = true
     for i in eachindex(a)
-        # if !isreal(a[i]) || abs(a[i]) < eps(T)
-        if abs(imag(a[i])) > eps(T) || abs(a[i]) < eps(T)
+        if !isreal(a[i]) || a[i] < eps(T)
             # not real, infeasible (?)
             cone.is_feas = false
             cone.feas_updated = true
@@ -104,10 +103,10 @@ function update_hess(cone::Conesample{T}) where T
     return cone.hess
 end
 
-use_dder3(cone::Conesample) = false
+# use_dder3(cone::Conesample) = false
 
-# function dder3(cone::Conesample, dir::AbstractVector) 
-#     dr3 = x -> ForwardDiff.gradient(x -> dir'*cone.barrier_hess_f(x)*dir, x)
-#     cone.dder3 = dr3(cone.point)
-#     return cone.dder3
-# end
+function dder3(cone::Conesample, dir::AbstractVector) 
+    dr3 = x -> ForwardDiff.gradient(x -> dir'*cone.barrier_hess_f(x)*dir, x)
+    cone.dder3 = dr3(cone.point)
+    return cone.dder3
+end
