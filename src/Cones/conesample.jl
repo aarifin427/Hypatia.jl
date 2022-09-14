@@ -7,9 +7,7 @@ ConeSample cone of dimension `dim`.
 
     $(FUNCTIONNAME){T}(dim::Int)
 """
-# The struct or abstract type definition 
 mutable struct Conesample{T <: Real} <: Cone{T}
-    # use_dual_barrier::Bool
     dim::Int
     nu::T
 
@@ -20,7 +18,7 @@ mutable struct Conesample{T <: Real} <: Cone{T}
 
     point::Vector{T}
     dual_point::Vector{T}
-    grad::Vector{T} # this stores gradient of barrier function = - nabla_p(x)/p(x) at point x
+    grad::Vector{T} # this stores value of gradient of barrier function at cone.point
     dder3::Vector{T}
     vec1::Vector{T}
     vec2::Vector{T}
@@ -28,14 +26,13 @@ mutable struct Conesample{T <: Real} <: Cone{T}
     grad_updated::Bool
     hess_updated::Bool
     inv_hess_updated::Bool
-    hess_fact_updated::Bool # what dis?
+    hess_fact_updated::Bool
     is_feas::Bool
     hess::Symmetric{T, Matrix{T}}
     inv_hess::Symmetric{T, Matrix{T}}
-    hess_fact_mat::Symmetric{T, Matrix{T}} # what dis?
-    hess_fact::Factorization{T} # what dis?
+    hess_fact_mat::Symmetric{T, Matrix{T}}
+    hess_fact::Factorization{T}
 
-    # p_function is matrix rep of a function
     function Conesample{T}(dim::Int, f::Any, barrier_grad_f::Any, barrier_hess_f::Any, init::AbstractVector) where {T <: Real}
         @assert dim >= 1
         cone = new{T}()
@@ -63,7 +60,6 @@ function set_initial_point!(arr::AbstractVector, cone::Conesample)
     return arr;
 end
 
-# TODO
 function update_feas(cone::Conesample{T}) where T
     @assert !cone.feas_updated
 
@@ -105,9 +101,3 @@ function update_hess(cone::Conesample{T}) where T
 end
 
 use_dder3(cone::Conesample) = false
-
-# function dder3(cone::Conesample, dir::AbstractVector) 
-#     dr3 = x -> ForwardDiff.gradient(x -> dir'*cone.barrier_hess_f(x)*dir, x)
-#     cone.dder3 = dr3(cone.point)
-#     return cone.dder3
-# end

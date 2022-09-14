@@ -16,7 +16,6 @@ import Hypatia.update_eigen!
 import Hypatia.spectral_outer!
 import Hypatia.posdef_fact_copy!
 import Hypatia.inv_fact!
-using ForwardDiff #ADDON
 using SymPy # ADDON
 
 include("arrayutilities.jl")
