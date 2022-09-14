@@ -11,6 +11,7 @@ ConeSample cone of dimension `dim`.
 mutable struct Conesample{T <: Real} <: Cone{T}
     # use_dual_barrier::Bool
     dim::Int
+    nu::T
 
     init::Vector{T}
     f::Any  # p(x) function abstract
@@ -38,12 +39,12 @@ mutable struct Conesample{T <: Real} <: Cone{T}
     function Conesample{T}(dim::Int, f::Any, barrier_grad_f::Any, barrier_hess_f::Any, init::AbstractVector) where {T <: Real}
         @assert dim >= 1
         cone = new{T}()
-        # cone.use_dual_barrier = false
         cone.dim = dim
         cone.f = f
         cone.barrier_grad_f = barrier_grad_f
         cone.barrier_hess_f = barrier_hess_f
         cone.init = convert(T,1)*init
+        cone.nu = -cone.init'*cone.barrier_grad_f(cone.init)
         return cone
     end
 end
@@ -55,7 +56,7 @@ reset_data(cone::Conesample) = (cone.feas_updated = cone.grad_updated =
 
 use_sqrt_hess_oracles(::Int, cone::Conesample) = false
 
-get_nu(cone::Conesample) = cone.dim
+get_nu(cone::Conesample) = cone.nu
 
 function set_initial_point!(arr::AbstractVector, cone::Conesample)
     arr .= cone.init
@@ -65,7 +66,7 @@ end
 # TODO
 function update_feas(cone::Conesample{T}) where T
     @assert !cone.feas_updated
-    
+
     λ = symbols("λ")
     e = cone.init
     x = cone.point
@@ -73,7 +74,6 @@ function update_feas(cone::Conesample{T}) where T
 
     cone.is_feas = true
     for i in eachindex(a)
-        # if !isreal(a[i]) || abs(a[i]) < eps(T)
         if abs(imag(a[i])) > eps(T) || abs(a[i]) < eps(T)
             # not real, infeasible (?)
             cone.is_feas = false

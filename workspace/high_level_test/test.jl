@@ -62,21 +62,25 @@ tol = 1e-5
             ##############################################################################################
             # test
             ##############################################################################################
-            include("general_test/FAIL/test3.jl")
+            include("general_test/test3.jl")
             @test string(Solvers.get_status(solver)) == "Optimal"
             
             ##############################################################################################
             # test
             ##############################################################################################
-            include("general_test/FAIL/test4.jl")
+            include("general_test/test4.jl")
             @test string(Solvers.get_status(solver)) == "Optimal"
         end
-        @testset "4D, 4 addends" begin
-            include("general_test/FAIL/test5.jl")
+        @testset "4D, 4 addends, 1 constraint" begin
+            include("general_test/test5.jl")
             @test string(Solvers.get_status(solver)) == "Optimal"
         end
-        @testset "4D, W-polynomial" begin
+        @testset "3D, 1st derivative of hyperbolic polynomials" begin
             include("general_test/test6.jl")
+            @test string(Solvers.get_status(solver)) == "Optimal"
+        end
+        @testset "4D, 4 addends, 2 constraints" begin
+            include("general_test/test7.jl")
             @test string(Solvers.get_status(solver)) == "Optimal"
         end
     end

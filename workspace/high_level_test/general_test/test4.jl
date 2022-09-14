@@ -1,10 +1,7 @@
 """
-FAIL
-NumericalFailure
+PASS (optimality)
 
 3D, 4 addends
-
-NOTE: initial mu = 1.25
 """
 
 using ForwardDiff
@@ -28,7 +25,7 @@ c = [
 G = Diagonal(-one(T) * I, n)
 h = zeros(T, n)
 
-p(x) = x[1]*x[2]*(x[1]^2 + 2*x[1]*x[2] + 2*x[1]*x[3] + 2*x[2]*x[3])
+p(x) = x[1]*x[2]*(x[1]^2 + x[1]*x[2] + x[1]*x[3] + x[2]*x[3])
 init_point = 1.0*[1,1,1]
 
 grad = x -> - 1/p(x) * ForwardDiff.gradient(x->p(x),x)

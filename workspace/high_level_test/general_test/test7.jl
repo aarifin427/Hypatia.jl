@@ -1,10 +1,7 @@
 """
-FAIL
-NumericalFailure
+PASS (optimality)
 
-4D, 4 addends
-
-NOTE: inital mu = 0.6
+4D, 4 addends, 2 constraints
 """
 
 using ForwardDiff
@@ -17,8 +14,12 @@ using LinearAlgebra
 T = Float64;
 n = 4;
 
-A = 1.0*[0.1 1 1 0.1]
-b = [0.5]
+A = [
+    6.27898  1.38615   1.85652  -1.17268;
+    7.99791  0.433622  6.81715  5.79162;
+]
+A .*= 10
+b = vec(sum(A, dims = 2))
 c = [
     0.6485574918878491;
     0.9051391876123972;
