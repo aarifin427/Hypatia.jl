@@ -62,7 +62,7 @@ Define hyperbolicity cone in terms of:
     hess        = hessian of polynomial's barrier function
     e           = directional vector that polynomial p is hyperbolic to
 """
-cone_test = Cones.Conesample{T}(n, p, grad, hess, e, d=3)
+cone_test = Cones.Hyperbolicity{T}(n, p, grad, hess, e, d=3)
 
 """
 Define the problem/model in native Hypatia interface in terms of the 

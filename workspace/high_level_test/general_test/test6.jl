@@ -51,7 +51,7 @@ hess = x -> (-ForwardDiff.hessian(x -> p_aux(x), x) * p_aux(x) + dpx(x)*dpx(x)')
 
 # d = 2 since derivation occured once
 # NOTE: does not work with using polynomialroots method, since symbolics cannot handle imaginary numbers
-cone_test = Cones.Conesample{T}(n, p, grad, hess, e)
+cone_test = Cones.Hyperbolicity{T}(n, p, grad, hess, e)
 model = Models.Model{T}(c, A, b, G, h, Cones.Cone{T}[cone_test])
 
 solver = Solvers.Solver{T}(verbose=true);

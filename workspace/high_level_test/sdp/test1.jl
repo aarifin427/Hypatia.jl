@@ -59,7 +59,7 @@ dpx = x -> ForwardDiff.gradient(x->p(x),x)
 hess = x -> (-ForwardDiff.hessian(x -> p(x), x) * p(x) + dpx(x)*dpx(x)')/(p(x)^2)
 
 # d = the first dimension of square matrix
-cone_test = Cones.Cone{T}[Cones.Conesample{T}(n, p, grad, hess, init_point, d=3)]
+cone_test = Cones.Cone{T}[Cones.Hyperbolicity{T}(n, p, grad, hess, init_point, d=3)]
 model = Models.Model{T}(c, A, b, G, h, cone_test)
 
 solver = Solvers.Solver{T}(verbose = false);

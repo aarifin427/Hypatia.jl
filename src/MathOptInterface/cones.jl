@@ -176,15 +176,27 @@ This is a sample cone.
 
 $(TYPEDFIELDS)
 """
-struct ConesampleCone{T <: Real} <: MOI.AbstractVectorSet
+struct HyperbolicityCone{T <: Real} <: MOI.AbstractVectorSet
     dim::Int
+    p::Any
+    barrier_grad_f::Any
+    barrier_hess_f::Any
+    init::AbstractVector
+    d::Int
 end
-export ConesampleCone
+export HyperbolicityCone
 
-MOI.dimension(cone::ConesampleCone) = cone.dim
+MOI.dimension(cone::HyperbolicityCone) = cone.dim
 
-cone_from_moi(::Type{T}, cone::ConesampleCone{T}) where {T <: Real} =
-    Cones.Conesample{T}(cone.dim)
+cone_from_moi(::Type{T}, cone::HyperbolicityCone{T}) where {T <: Real} =
+    Cones.Hyperbolic{T}(
+        cone.dim,
+        cone.p,
+        cone.barrier_grad_f,
+        cone.barrier_hess_f,
+        cone.init,
+        d = cone.d
+        )
 
 """
 $(TYPEDEF)
@@ -681,7 +693,7 @@ cone_from_moi(::Type{T}, cone::WSOSInterpEpiNormEuclCone{T}) where {T <: Real} =
 
 const HypatiaCones{T <: Real} = Union{
     NonnegativeCone{T},
-    ConesampleCone{T},
+    HyperbolicityCone{T},
     PosSemidefTriCone{T, T},
     PosSemidefTriCone{T, Complex{T}},
     DoublyNonnegativeTriCone{T},
