@@ -41,7 +41,7 @@ ans_control = Solvers.get_x(solver)
 p(x) = x[1]*x[2]*x[3]*x[4]
 init_point = 1.0*[1,1,1,1]
 
-cone_test = Cones.Cone{T}[Cones.Conesample{T}(n, p, grad, hess, init_point)]
+cone_test = Cones.Cone{T}[Cones.Conesample{T}(n, p, grad, hess, init_point, d=4)]
 model = Models.Model{T}(c, A, b, G, h, cone_test)
 
 solver = Solvers.Solver{T}(verbose = false);

@@ -10,6 +10,7 @@ ConeSample cone of dimension `dim`.
 mutable struct Conesample{T <: Real} <: Cone{T}
     dim::Int
     nu::T
+    d::Int
 
     init::Vector{T}
     p::Any  # p(x) function abstract
@@ -33,10 +34,11 @@ mutable struct Conesample{T <: Real} <: Cone{T}
     hess_fact_mat::Symmetric{T, Matrix{T}}
     hess_fact::Factorization{T}
 
-    function Conesample{T}(dim::Int, p::Any, barrier_grad_f::Any, barrier_hess_f::Any, init::AbstractVector) where {T <: Real}
+    function Conesample{T}(dim::Int, p::Any, barrier_grad_f::Any, barrier_hess_f::Any, init::AbstractVector; d::Int=-1) where {T <: Real}
         @assert dim >= 1
         cone = new{T}()
         cone.dim = dim
+        cone.d = d
         cone.p = p
         cone.barrier_grad_f = barrier_grad_f
         cone.barrier_hess_f = barrier_hess_f
@@ -59,30 +61,61 @@ function set_initial_point!(arr::AbstractVector, cone::Conesample)
     arr .= cone.init
     return arr;
 end
+
+function polyroot(d::Int, f::Any)
+    lambda_set = [] # should be d+1 elements
+    for i = 0:d
+        push!(lambda_set, exp(2*pi*im*i/(d+1)))
+    end    
+
+    f_lambda_set = ComplexF64[]
+    for i = 0:d
+        push!(f_lambda_set, f(lambda_set[i+1]))
+    end
+
+    mat = zeros(ComplexF64, d+1,d+1)
+    for i = 1:d + 1
+        for j = 1:d + 1
+            mat[i,j] = lambda_set[i]^(j-1)
+        end
+    end
+
+    coeffs = mat^-1*f_lambda_set
+
+    return Complex{Float64}.(PolynomialRoots.roots(big.(coeffs)))
+end
+
 function update_feas(cone::Conesample{T}) where T
     @assert !cone.feas_updated
+
+    # for debugging
+    if cone.feas_bypass
+        cone.is_feas = true
+        cone.feas_updated = true
+        return cone.is_feas
+    end
 
     e = cone.init
     x = cone.point/norm(cone.point)
     
     f(λ) = cone.p(λ*e-x)
-    @vars t
-    a = solve(cone.p(t*e-x))
+
+    if cone.d > 0
+        a = polyroot(cone.d, f)
+        tol = 1e-7
+    else
+        @vars t
+        a = solve(cone.p(t*e-x))
+        tol = 1e-7
+    end
 
     cone.is_feas = true
     for i in eachindex(a)
-        if abs(imag(a[i])) > eps(T) || abs(a[i]) < eps(T) 
+        # if roots' sign is negative, point not in the cone        
+        if abs(f(real(a[i]))) > tol || sign(real(a[i])) < 0
             cone.is_feas = false
             cone.feas_updated = true
             return cone.is_feas
-        end
-        if i > 1
-            # if roots' sign is negative, point not in the cone
-            if sign(real(a[i])) < 0
-                cone.is_feas = false
-                cone.feas_updated = true
-                return cone.is_feas
-            end
         end
     end
     cone.feas_updated = true

@@ -69,7 +69,7 @@ grad = x -> - 1/p(x) * ForwardDiff.gradient(x->p(x),x)
 dpx = x -> ForwardDiff.gradient(x->p(x),x)
 hess = x -> (-ForwardDiff.hessian(x -> p(x), x) * p(x) + dpx(x)*dpx(x)')/(p(x)^2)
 
-cone_test = Cones.Conesample{T}(n, p, grad, hess, e)
+cone_test = Cones.Conesample{T}(n, p, grad, hess, e, d=4)
 model = Models.Model{T}(c, A, b, G, h, Cones.Cone{T}[cone_test])
 
 solver = Solvers.Solver{T}(verbose = true);

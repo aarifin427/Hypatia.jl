@@ -36,8 +36,8 @@ this function must also use a symbolic differentiation too.
 
 ForwardDiff's derivative method does not produce symbolic anonymous function.
 """
-function p(x)
-    Symbolics.@variables t1
+function p(x::Any)
+    Symbolics.@variables t1::Any
     return substitute(Symbolics.derivative(hp(x + t1*e), t1), (Dict(t1 => 0)))
 end
 
@@ -49,6 +49,8 @@ grad = x -> - 1/p_aux(x) * ForwardDiff.gradient(x->p_aux(x),x)
 dpx = x -> ForwardDiff.gradient(x->p_aux(x),x)
 hess = x -> (-ForwardDiff.hessian(x -> p_aux(x), x) * p_aux(x) + dpx(x)*dpx(x)')/(p_aux(x)^2)
 
+# d = 2 since derivation occured once
+# NOTE: does not work with using polynomialroots method, since symbolics cannot handle imaginary numbers
 cone_test = Cones.Conesample{T}(n, p, grad, hess, e)
 model = Models.Model{T}(c, A, b, G, h, Cones.Cone{T}[cone_test])
 
