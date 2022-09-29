@@ -1,12 +1,12 @@
 using Test
-using ForwardDiff
-using Hypatia
-using Hypatia.Cones
-using Hypatia.Models
-import Hypatia.Solvers
-using LinearAlgebra
-using JuMP
-using SCS
+# using ForwardDiff
+# using Hypatia
+# using Hypatia.Cones
+# using Hypatia.Models
+# import Hypatia.Solvers
+# using LinearAlgebra
+# using JuMP
+# using SCS
 ##################GLOBAL######################
 tol = 1e-5
 ##############################################
@@ -81,6 +81,10 @@ tol = 1e-5
         end
         @testset "4D, 4 addends, 2 constraints" begin
             include("general_test/test7.jl")
+            @test string(Solvers.get_status(solver)) == "Optimal"
+        end
+        @testset "8D, over 3D Hypercube" begin
+            include("general_test/test8.jl")
             @test string(Solvers.get_status(solver)) == "Optimal"
         end
     end

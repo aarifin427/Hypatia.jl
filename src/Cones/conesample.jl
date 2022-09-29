@@ -12,7 +12,7 @@ mutable struct Conesample{T <: Real} <: Cone{T}
     nu::T
 
     init::Vector{T}
-    f::Any  # p(x) function abstract
+    p::Any  # p(x) function abstract
     barrier_grad_f::Any # grad(-log(p(x)))
     barrier_hess_f::Any # hess(-log(p(x)))
 
@@ -33,11 +33,11 @@ mutable struct Conesample{T <: Real} <: Cone{T}
     hess_fact_mat::Symmetric{T, Matrix{T}}
     hess_fact::Factorization{T}
 
-    function Conesample{T}(dim::Int, f::Any, barrier_grad_f::Any, barrier_hess_f::Any, init::AbstractVector) where {T <: Real}
+    function Conesample{T}(dim::Int, p::Any, barrier_grad_f::Any, barrier_hess_f::Any, init::AbstractVector) where {T <: Real}
         @assert dim >= 1
         cone = new{T}()
         cone.dim = dim
-        cone.f = f
+        cone.p = p
         cone.barrier_grad_f = barrier_grad_f
         cone.barrier_hess_f = barrier_hess_f
         cone.init = convert(T,1)*init
@@ -59,22 +59,30 @@ function set_initial_point!(arr::AbstractVector, cone::Conesample)
     arr .= cone.init
     return arr;
 end
-
 function update_feas(cone::Conesample{T}) where T
     @assert !cone.feas_updated
 
-    λ = symbols("λ")
     e = cone.init
-    x = cone.point
-    a = solve(cone.f(λ*e-x))
+    x = cone.point/norm(cone.point)
+    
+    f(λ) = cone.p(λ*e-x)
+    @vars t
+    a = solve(cone.p(t*e-x))
 
     cone.is_feas = true
     for i in eachindex(a)
-        if abs(imag(a[i])) > eps(T) || abs(a[i]) < eps(T)
-            # not real, infeasible (?)
+        if abs(imag(a[i])) > eps(T) || abs(a[i]) < eps(T) 
             cone.is_feas = false
             cone.feas_updated = true
             return cone.is_feas
+        end
+        if i > 1
+            # if roots' sign is negative, point not in the cone
+            if sign(real(a[i])) < 0
+                cone.is_feas = false
+                cone.feas_updated = true
+                return cone.is_feas
+            end
         end
     end
     cone.feas_updated = true

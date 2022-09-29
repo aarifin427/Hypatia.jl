@@ -25,14 +25,14 @@ G = Diagonal(-one(T) * I, n)
 h = zeros(T, n)
 
 p(x) = x[1]*x[2]*(x[1]+ x[2] +x[3])
-init_point = 1.0*[1,1,1]
+e = 1.0*[1,1,1]
 
 grad = x -> - 1/p(x) * ForwardDiff.gradient(x->p(x),x)
 dpx = x -> ForwardDiff.gradient(x->p(x),x)
 hess = x -> (-ForwardDiff.hessian(x -> p(x), x) * p(x) + dpx(x)*dpx(x)')/(p(x)^2)
 
-cone_test = Cones.Cone{T}[Cones.Conesample{T}(n, p, grad, hess, init_point)]
-model = Models.Model{T}(c, A, b, G, h, cone_test)
+cone_test = Cones.Conesample{T}(n, p, grad, hess, e)
+model = Models.Model{T}(c, A, b, G, h, Cones.Cone{T}[cone_test])
 
 solver = Solvers.Solver{T}(verbose = false);
 Solvers.load(solver, model)
