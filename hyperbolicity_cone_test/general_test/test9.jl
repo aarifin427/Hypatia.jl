@@ -1,8 +1,3 @@
-"""
-PASS (optimality)
-
-blackbox p(x), non algebraic expression
-"""
 
 using ForwardDiff
 using Hypatia
@@ -10,6 +5,8 @@ using Hypatia.Cones
 using Hypatia.Models
 import Hypatia.Solvers
 using LinearAlgebra
+using PolynomialRoots
+using Roots
 include("graph_hyperbolic.jl")
 
 T = Float64;
@@ -45,13 +42,13 @@ weighted_edge_set = [
     [1,2,1],
     [2,3,1],
     [3,4,1],
-    [1,4,1],
+    [1,4,0.1],
     [5,6,1],
     [6,7,1],
-    [7,8,1],
+    [7,8,0.7],
     [5,8,1],
     [1,5,1],
-    [2,6,1],
+    [2,6,0.9],
     [3,7,1],
     [4,8,1]
 ]
@@ -59,7 +56,7 @@ weighted_edge_set = [
 """
 Example: Q_3 (3D hypercube), all weights are 1
 polynomial is in 8D (n = 2^3 = 8)
-highest power d = 4 ∀ graphs
+highest power d = 4 ∀ graphs with r = 2
 """
 d = 4
 p(x) = get_p(n, weighted_edge_set, x)

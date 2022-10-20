@@ -74,9 +74,12 @@ AA = 1.0*[0.1 1 1 0.1]
 b = [0.5]
 n = 4
 
+"""
+# Example usage
 status, X_sol, obj_value = jump_SDP(A, AA, b, c, n);
 println("status: ", status)
 
 for i in 1:4
     println(X_sol[i], "=", value(X_sol[i]))
 end
+"""

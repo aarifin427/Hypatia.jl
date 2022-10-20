@@ -1,7 +1,18 @@
 using Combinatorics
 """
-This is a class of hyperbolic polynomials derived from graphs/networks. The polynomials
-are defined from (https://arxiv.org/pdf/1512.05878.pdf) where r = 2 only.
+    get_p(n, edge_set, x)
+
+Outputs hyperbolic polynomial anonymous function for r = 2. Ref: (https://arxiv.org/pdf/1512.05878.pdf)
+
+# Arguments
+- `n`: number of vertices in a network
+- `edge_set`: edge list described as [a, b, w] where a,b ∈ {1, ..., n} and w ∈ [0,1]
+- `x`: variable x for anonymous function
+
+# Examples
+```
+f(x) = get_p(2, [[1,2,0.1], [1,3,0.3]], x)
+```
 """
 function get_p(n, edge_set, x)
     """

@@ -1,11 +1,3 @@
-"""
-???
-
-SDP, 3x3 matrices, 3D
-
-NOTE: norm of final answers are 1e-3
-"""
-
 using ForwardDiff
 using Hypatia
 using Hypatia.Cones
@@ -59,10 +51,10 @@ dpx = x -> ForwardDiff.gradient(x->p(x),x)
 hess = x -> (-ForwardDiff.hessian(x -> p(x), x) * p(x) + dpx(x)*dpx(x)')/(p(x)^2)
 
 # d = the first dimension of square matrix
-cone_test = Cones.Cone{T}[Cones.Hyperbolicity{T}(n, p, grad, hess, init_point, d=3)]
+cone_test = Cones.Cone{T}[Cones.Hyperbolicity{T}(n, p, grad, hess, init_point)]
 model = Models.Model{T}(c, A, b, G, h, cone_test)
 
-solver = Solvers.Solver{T}(verbose = false);
+solver = Solvers.Solver{T}(verbose = true);
 Solvers.load(solver, model)
 Solvers.solve(solver)
 ans_test = Solvers.get_x(solver)

@@ -1,12 +1,9 @@
-
 using ForwardDiff
 using Hypatia
 using Hypatia.Cones
 using Hypatia.Models
 import Hypatia.Solvers
 using LinearAlgebra
-using PolynomialRoots
-using Roots
 include("graph_hyperbolic.jl")
 
 T = Float64;
@@ -34,10 +31,6 @@ c = [
 G = Diagonal(-one(T) * I, n)
 h = zeros(T, n)
 
-"""
-Example: Q3 (3D hypercube), all weights are 1
-polynomial is 8D (2^3 = 8)
-"""
 weighted_edge_set = [
     [1,2,1],
     [2,3,1],
@@ -56,7 +49,7 @@ weighted_edge_set = [
 """
 Example: Q_3 (3D hypercube), all weights are 1
 polynomial is in 8D (n = 2^3 = 8)
-highest power d = 4 ∀ graphs with r = 2
+highest power d = 4 
 """
 d = 4
 p(x) = get_p(n, weighted_edge_set, x)
@@ -66,41 +59,10 @@ grad = x -> - 1/p(x) * ForwardDiff.gradient(x->p(x),x)
 dpx = x -> ForwardDiff.gradient(x->p(x),x)
 hess = x -> (-ForwardDiff.hessian(x -> p(x), x) * p(x) + dpx(x)*dpx(x)')/(p(x)^2)
 
-cone_test = Cones.Hyperbolicity{T}(n, p, grad, hess, e, d = 4)
+cone_test = Cones.Hyperbolicity{T}(n, p, grad, hess, e, d=d)
 model = Models.Model{T}(c, A, b, G, h, Cones.Cone{T}[cone_test])
 
 solver = Solvers.Solver{T}(verbose = true);
 Solvers.load(solver, model)
 Solvers.solve(solver)
 Solvers.get_status(solver)
-
-# function polyroot(d::Int, f::Any)
-#     lambda_set = [] # should be d+1 elements
-#     for i = 0:d
-#         push!(lambda_set, exp(2*pi*im*i/(d+1)))
-#     end    
-
-#     f_lambda_set = ComplexF64[]
-#     for i = 0:d
-#         push!(f_lambda_set, f(lambda_set[i+1]))
-#     end
-
-#     mat = zeros(ComplexF64, d+1,d+1)
-#     for i = 1:d + 1
-#         for j = 1:d + 1
-#             mat[i,j] = lambda_set[i]^(j-1)
-#         end
-#     end
-
-#     coeffs = mat^-1*f_lambda_set
-
-#     return coeffs
-# end
-
-# f(λ) = p(λ*e-e)
-# coeffs = polyroot(4,f)
-# a0 = Complex{Float64}.(PolynomialRoots.roots(big.(coeffs)))
-# for i in eachindex(a0)
-#     a0[i] = find_zero(f, real(a0[i]))
-# end
-# a0

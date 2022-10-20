@@ -1,9 +1,3 @@
-"""
-PASS
-
-4D, vamos polynomial, 3 constraints
-"""
-
 using ForwardDiff
 using Hypatia
 using Hypatia.Cones
@@ -80,7 +74,7 @@ for i in eachindex(X_sol)
     push!(ans_control, value(X_sol[i]))
 end
 
-# Hyperbolic
+# Hyperbolic, vamos polynomial
 p(x) = x[1]^2 * x[2]^2 + 4*(x[1]+x[2]+x[3]+x[4])*(x[1]*x[2]*x[3] + x[1]*x[2]*x[4] + x[1]*x[3]*x[4] + x[2]*x[3]*x[4])
 init_point = 1.0*[1,1,0,0]
 
@@ -88,7 +82,7 @@ grad = x -> - 1/p(x) * ForwardDiff.gradient(x->p(x),x)
 dpx = x -> ForwardDiff.gradient(x->p(x),x)
 hess = x -> (-ForwardDiff.hessian(x -> p(x), x) * p(x) + dpx(x)*dpx(x)')/(p(x)^2)
 
-cone_test = Cones.Cone{T}[Cones.Hyperbolicity{T}(n, p, grad, hess, init_point, d=4)]
+cone_test = Cones.Cone{T}[Cones.Hyperbolicity{T}(n, p, grad, hess, init_point)]
 model = Models.Model{T}(c, A, b, G, h, cone_test)
 
 solver = Solvers.Solver{T}(verbose = true);

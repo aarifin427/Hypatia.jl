@@ -1,9 +1,3 @@
-"""
-PASS (optimality)
-
-3D, 4 addends
-"""
-
 using ForwardDiff
 using Hypatia
 using Hypatia.Cones

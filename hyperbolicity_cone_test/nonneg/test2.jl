@@ -1,12 +1,3 @@
-"""
-PASS
-
-4D, 1 addend, init point is feasible (within constraints of Ax=b)
-
-p(x) = x[1]*x[2]*x[3]*x[4]
-init_point = 1/sqrt(6)*[1,1,1,1]
-"""
-
 using ForwardDiff
 using Hypatia
 using Hypatia.Cones
@@ -17,7 +8,7 @@ using LinearAlgebra
 T = Float64;
 n = 4;
 
-A = 1.0*[0.1 1 1 0.1]
+A = 1.0*[0 1 1 0]
 b = [0.5]
 c = [
     0.6485574918878491;

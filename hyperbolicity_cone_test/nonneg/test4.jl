@@ -1,9 +1,3 @@
-"""
-PASS (optimality)
-
-3D, 4 addends
-"""
-
 using ForwardDiff
 using Hypatia
 using Hypatia.Cones
@@ -25,17 +19,27 @@ c = [
 G = Diagonal(-one(T) * I, n)
 h = zeros(T, n)
 
-p(x) = x[1]*x[2]*(x[1]^2 + 2*x[1]*x[2] + 2*x[1]*x[3] + 2*x[2]*x[3])
-e = 1.0*[1,1,1]
+# Nonnegative Cone setup
+cone_control = Cones.Cone{T}[Cones.Nonnegative{T}(n)]
+model = Models.Model{T}(c, A, b, G, h, cone_control)
+
+solver = Solvers.Solver{T}(verbose = true);
+Solvers.load(solver, model)
+Solvers.solve(solver)
+ans_control = Solvers.get_x(solver)
+
+# hyperbolicity cone in terms of the specified p(x)
+p(x) = x[1]*x[2]*x[3]
+init_point = [1,1,1]
 
 grad = x -> - 1/p(x) * ForwardDiff.gradient(x->p(x),x)
 dpx = x -> ForwardDiff.gradient(x->p(x),x)
 hess = x -> (-ForwardDiff.hessian(x -> p(x), x) * p(x) + dpx(x)*dpx(x)')/(p(x)^2)
 
-cone_test = Cones.Hyperbolicity{T}(n, p, grad, hess, e, d=4)
-model = Models.Model{T}(c, A, b, G, h, Cones.Cone{T}[cone_test])
+cone_test = Cones.Cone{T}[Cones.Hyperbolicity{T}(n, p, grad, hess, init_point)]
+model = Models.Model{T}(c, A, b, G, h, cone_test)
 
 solver = Solvers.Solver{T}(verbose = true);
 Solvers.load(solver, model)
 Solvers.solve(solver)
-Solvers.get_status(solver)
+ans_test = Solvers.get_x(solver)

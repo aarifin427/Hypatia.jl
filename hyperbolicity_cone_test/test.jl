@@ -1,12 +1,4 @@
 using Test
-# using ForwardDiff
-# using Hypatia
-# using Hypatia.Cones
-# using Hypatia.Models
-# import Hypatia.Solvers
-# using LinearAlgebra
-# using JuMP
-# using SCS
 ##################GLOBAL######################
 tol = 1e-5
 ##############################################
@@ -63,13 +55,13 @@ tol = 1e-5
             # test
             ##############################################################################################
             include("general_test/test3.jl")
-            @test string(Solvers.get_status(solver)) == "Optimal"
+            @test string(Solvers.get_status(solver)) in ["Optimal", "NearOptimal"]
             
             ##############################################################################################
             # test
             ##############################################################################################
             include("general_test/test4.jl")
-            @test string(Solvers.get_status(solver)) == "Optimal"
+            @test string(Solvers.get_status(solver)) in ["Optimal", "NearOptimal"]
         end
         @testset "4D, 4 addends, 1 constraint" begin
             include("general_test/test5.jl")

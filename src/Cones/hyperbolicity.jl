@@ -8,32 +8,45 @@ Hyperbolicity cone of dimension `dim`.
     $(FUNCTIONNAME){T}(dim::Int)
 """
 mutable struct Hyperbolicity{T <: Real} <: Cone{T}
-    dim::Int
-    nu::T
-    d::Int
+    dim::Int        # dimension of the problem, equal to size of initial point
+    nu::T           # barrier parameter
+    d::Int          # degree of polynomial
 
-    init::Vector{T}
-    p::Any  # p(x) function abstract
-    barrier_grad_f::Any # grad(-log(p(x)))
-    barrier_hess_f::Any # hess(-log(p(x)))
+    init::Vector{T}         # initial point
+    p::Any                  # p(x) hyperbolic polynomial callable function
+    barrier_grad_f::Any     # grad(-log(p(x))) callable function
+    barrier_hess_f::Any     # hess(-log(p(x))) callable function
 
-    point::Vector{T}
-    dual_point::Vector{T}
-    grad::Vector{T} # this stores value of gradient of barrier function at cone.point
-    dder3::Vector{T}
-    vec1::Vector{T}
-    vec2::Vector{T}
-    feas_updated::Bool
-    grad_updated::Bool
-    hess_updated::Bool
-    inv_hess_updated::Bool
-    hess_fact_updated::Bool
-    is_feas::Bool
-    hess::Symmetric{T, Matrix{T}}
-    inv_hess::Symmetric{T, Matrix{T}}
+    point::Vector{T}                        # current point iterate
+    dual_point::Vector{T}                   # dual of current point iterate, evaluated by parent class
+    grad::Vector{T}                         # value of gradient of barrier function at cone.point
+    dder3::Vector{T}                        # third order derivative, evaluated by parent class
+    vec1::Vector{T}                         # holds temporary values in PDIPM
+    vec2::Vector{T}                         # holds temporary values in PDIPM
+    feas_updated::Bool                      # update state for feasibility oracle
+    grad_updated::Bool                      # update state for gradient of barrier function oracle
+    hess_updated::Bool                      # update state for hessian of barrier function oracle
+    inv_hess_updated::Bool                  # update state for iverse of the hessian of barrier function oracle, evaluated by parent class
+    hess_fact_updated::Bool                 # update state for hessian factorizatoin oracle, evaluated by parent class
+    is_feas::Bool                           # feasibility at current point iterate
+    hess::Symmetric{T, Matrix{T}}           # hessian matrix at current point iterate
+    inv_hess::Symmetric{T, Matrix{T}}       # inverse of hessian matrix at current point iterate, evaluated by parent class
     hess_fact_mat::Symmetric{T, Matrix{T}}
     hess_fact::Factorization{T}
 
+    """
+        Hyperbolicity{T}(dim, p, barrier_grad_f, barrier_hess_f, init[, d]) where {T <: Real}
+    
+    If `d` is unspecified, feasibility oracle will use symbolic approach, generally slower but more accurate than the numerical approach.
+
+    # Arguments
+    - `dim`: dimension of the problem or number of variables
+    - `p`: hyperbolic polynomial callable function
+    - `barrier_grad_f`: gradient of the barrier function for hyperbolic polynomial, equivalent to ∇F(x), callable function
+    - `barrier_hess_f`: hessian of the barrier function for hyperbolic polynomial, equivalent to ∇²F(x), callable function
+    - `init`: initial point, usually vector e that p(x) is hyperbolic to
+    - `d`: degree of hyperbolic polynomial, will trigger numerical approach for feasibility oracle
+    """
     function Hyperbolicity{T}(dim::Int, p::Any, barrier_grad_f::Any, barrier_hess_f::Any, init::AbstractVector; d::Int=-1) where {T <: Real}
         @assert dim >= 1
         cone = new{T}()
@@ -62,8 +75,11 @@ function set_initial_point!(arr::AbstractVector, cone::Hyperbolicity)
     return arr;
 end
 
+
+"""Computes the coefficients of function f with degree d using roots of unity and PolynomialRoots."""
 function polyroot(d::Int, f::Any)
-    lambda_set = [] # should be d+1 elements
+    # Roots of unity
+    lambda_set = []
     for i = 0:d
         push!(lambda_set, exp(2*pi*im*i/(d+1)))
     end    
@@ -115,9 +131,7 @@ function update_feas(cone::Hyperbolicity{T}) where T
     return cone.is_feas
 end
 
-# =====================================================#
-# Gradient barrier function
-# =====================================================#
+"""Computes gradient of barrier function at x = cone.point"""
 function update_grad(cone::Hyperbolicity)
     # outputs gradient of barrier function -log(p(x)) where x = cone.point
     @assert cone.is_feas
@@ -126,6 +140,7 @@ function update_grad(cone::Hyperbolicity)
     return cone.grad
 end
 
+"""Computes hessian of barrier function at x = cone.point"""
 function update_hess(cone::Hyperbolicity{T}) where T
     cone.grad_updated || update_grad(cone)
     # output hessian of barrier function -log(p(x)) where x = cone.point
@@ -134,4 +149,5 @@ function update_hess(cone::Hyperbolicity{T}) where T
     return cone.hess
 end
 
+"""Not using third order derivative oracle"""
 use_dder3(cone::Hyperbolicity) = false

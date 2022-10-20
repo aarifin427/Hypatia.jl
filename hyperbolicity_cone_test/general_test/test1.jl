@@ -1,8 +1,4 @@
 """
-PASS (Optimality check)
-
-3D, 2 addends
-
 Problem definition:
 min     c'*x
 s.t.    A*x - b = 0
@@ -51,9 +47,6 @@ grad = x -> - 1/p(x) * ForwardDiff.gradient(x->p(x),x)
 dpx = x -> ForwardDiff.gradient(x->p(x),x)
 hess = x -> (-ForwardDiff.hessian(x -> p(x), x) * p(x) + dpx(x)*dpx(x)')/(p(x)^2)
 
-# cone_test = Cones.Cone{T}[Cones.Conesample{T}(n, p, grad, hess, init_point)]
-# model = Models.Model{T}(c, A, b, G, h, cone_test)
-
 """ 
 Define hyperbolicity cone in terms of: 
     n           = cone dimension
@@ -61,6 +54,9 @@ Define hyperbolicity cone in terms of:
     grad        = gradient of polynomial's barrier function
     hess        = hessian of polynomial's barrier function
     e           = directional vector that polynomial p is hyperbolic to
+    d           = [opt] degree of polynomial
+
+Specifying argument d will use numerical approach in feasibility oracle.
 """
 cone_test = Cones.Hyperbolicity{T}(n, p, grad, hess, e, d=3)
 
@@ -71,7 +67,7 @@ optimisation parameters: c, A, b, G, h and a list of cones.
 Note: the cones must be passed as a list with type Cones.Cone{T}
 """
 model = Models.Model{T}(c, A, b, G, h, Cones.Cone{T}[cone_test])
-solver = Solvers.Solver{T}(verbose = false);
+solver = Solvers.Solver{T}(verbose = true);
 Solvers.load(solver, model)
 Solvers.solve(solver)
 Solvers.get_status(solver)

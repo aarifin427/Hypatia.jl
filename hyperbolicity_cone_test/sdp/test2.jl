@@ -1,9 +1,3 @@
-"""
-PASS
-
-4D, vamos polynomial, 1 constraint
-"""
-
 using ForwardDiff
 using Hypatia
 using Hypatia.Cones
@@ -75,7 +69,7 @@ for i in eachindex(X_sol)
     push!(ans_control, value(X_sol[i]))
 end
 
-# Hyperbolic
+# Hyperbolic, vamos polynomial
 p(x) = x[1]^2 * x[2]^2 + 4*(x[1]+x[2]+x[3]+x[4])*(x[1]*x[2]*x[3] + x[1]*x[2]*x[4] + x[1]*x[3]*x[4] + x[2]*x[3]*x[4])
 init_point = 1.0*[1,1,0,0]
 
