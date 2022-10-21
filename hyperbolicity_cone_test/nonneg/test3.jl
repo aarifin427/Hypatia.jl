@@ -8,7 +8,7 @@ using LinearAlgebra
 T = Float64;
 n = 4;
 
-A = 1.0*[0 1 1 0]
+A = 1.0*[0.1 1 1 0.1]
 b = [0.5]
 c = [
     0.6485574918878491;
@@ -31,7 +31,11 @@ ans_control = Solvers.get_x(solver)
 
 # hyperbolicity cone in terms of the specified p(x)
 p(x) = x[1]*x[2]*x[3]*x[4]
-init_point = 1.0*[1,1,1,1]
+init_point = [1,1,1,1]
+
+grad = x -> - 1/p(x) * ForwardDiff.gradient(x->p(x),x)
+dpx = x -> ForwardDiff.gradient(x->p(x),x)
+hess = x -> (-ForwardDiff.hessian(x -> p(x), x) * p(x) + dpx(x)*dpx(x)')/(p(x)^2)
 
 cone_test = Cones.Cone{T}[Cones.Hyperbolicity{T}(n, p, grad, hess, init_point, d=4)]
 model = Models.Model{T}(c, A, b, G, h, cone_test)

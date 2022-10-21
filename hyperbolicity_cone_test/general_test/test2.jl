@@ -1,14 +1,39 @@
+"""
+Problem definition:
+min     c'*x
+s.t.    A*x - b = 0
+        h - G*x ∈ int(K)
+where K is the cone.
+
+Simplified:
+min     c'*x
+s.t.    A*x - b = 0
+        x ∈ int(K)
+where h = 0, G = -identity
+"""
+
 using ForwardDiff
 using Hypatia
 using Hypatia.Cones
 using Hypatia.Models
 import Hypatia.Solvers
 using LinearAlgebra
+
+# Solution type
 T = Float64;
+
+# Dimension of solution
 n = 3;
 
-A = 1.0*[0.1 1 1]
-b = [0.5]
+# 1 linear constraint for A*x - b = 0
+A = [
+    6.27898  1.38615   1.85652;
+    7.99791  0.433622  6.81715;
+]
+A .*= 10
+b = vec(sum(A, dims = 2))
+
+# Objective function coefficients
 c = [
     0.6485574918878491;
     0.9051391876123972;
@@ -18,16 +43,34 @@ c = [
 G = Diagonal(-one(T) * I, n)
 h = zeros(T, n)
 
-p(x) = x[1]*x[2]*(x[1]+ x[2] +x[3])
+# Hyperbolic polynomial definition with respect to vector e
+p(x) = x[1]*x[2]*x[3] + x[1]*x[2]^2
 e = 1.0*[1,1,1]
 
 grad = x -> - 1/p(x) * ForwardDiff.gradient(x->p(x),x)
 dpx = x -> ForwardDiff.gradient(x->p(x),x)
 hess = x -> (-ForwardDiff.hessian(x -> p(x), x) * p(x) + dpx(x)*dpx(x)')/(p(x)^2)
 
-cone_test = Cones.Hyperbolicity{T}(n, p, grad, hess, e, d=3)
-model = Models.Model{T}(c, A, b, G, h, Cones.Cone{T}[cone_test])
+""" 
+Define hyperbolicity cone in terms of: 
+    n           = cone dimension
+    p           = hyperbolic polynomial
+    grad        = gradient of polynomial's barrier function
+    hess        = hessian of polynomial's barrier function
+    e           = directional vector that polynomial p is hyperbolic to
+    d           = [opt] degree of polynomial
 
+Specifying argument d will use numerical approach in feasibility oracle.
+"""
+cone_test = Cones.Hyperbolicity{T}(n, p, grad, hess, e, d=3)
+
+"""
+Define the problem/model in native Hypatia interface in terms of the 
+optimisation parameters: c, A, b, G, h and a list of cones. 
+
+Note: the cones must be passed as a list with type Cones.Cone{T}
+"""
+model = Models.Model{T}(c, A, b, G, h, Cones.Cone{T}[cone_test])
 solver = Solvers.Solver{T}(verbose = true);
 Solvers.load(solver, model)
 Solvers.solve(solver)
